@@ -8,7 +8,7 @@ import CategoryList from '@/components/CategoryList';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-yellow-50">
       <Navbar />
       <main className="flex-grow">
         <Hero />
