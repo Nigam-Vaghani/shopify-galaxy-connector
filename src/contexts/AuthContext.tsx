@@ -17,6 +17,12 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Check if we're using placeholder Supabase credentials for dev mode
+const isDevelopmentMode = () => {
+  return import.meta.env.VITE_SUPABASE_URL === undefined || 
+         import.meta.env.VITE_SUPABASE_URL.includes('placeholder');
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -25,6 +31,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    const devMode = isDevelopmentMode();
+    
+    if (devMode) {
+      // Set up development mode auth state after a short delay
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+
+    // If not in dev mode, use real Supabase auth
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -65,6 +82,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      
+      if (isDevelopmentMode()) {
+        // Simulate successful login in development mode
+        setTimeout(() => {
+          const mockUser = {
+            id: 'dev-user-id',
+            email: email,
+            app_metadata: {},
+            user_metadata: {},
+            aud: 'authenticated',
+            created_at: new Date().toISOString()
+          };
+          
+          setUser(mockUser as User);
+          setUserIsAdmin(email.includes('admin')); // Make emails with "admin" in them admins
+          setIsLoading(false);
+          
+          toast({
+            title: "Development Mode",
+            description: "Signed in successfully (DEVELOPMENT MODE)",
+          });
+        }, 800);
+        return;
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast({
@@ -78,13 +120,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      if (!isDevelopmentMode()) {
+        setIsLoading(false);
+      }
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      
+      if (isDevelopmentMode()) {
+        // Simulate successful signup in development mode
+        setTimeout(() => {
+          const mockUser = {
+            id: 'dev-user-id',
+            email: email,
+            app_metadata: {},
+            user_metadata: {},
+            aud: 'authenticated',
+            created_at: new Date().toISOString()
+          };
+          
+          setUser(mockUser as User);
+          setUserIsAdmin(email.includes('admin')); // Make emails with "admin" in them admins
+          setIsLoading(false);
+          
+          toast({
+            title: "Development Mode",
+            description: "Account created successfully (DEVELOPMENT MODE)",
+          });
+        }, 800);
+        return;
+      }
+      
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
       toast({
@@ -98,12 +167,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      if (!isDevelopmentMode()) {
+        setIsLoading(false);
+      }
     }
   };
 
   const signOut = async () => {
     try {
+      if (isDevelopmentMode()) {
+        // Simulate sign out in development mode
+        setUser(null);
+        setUserIsAdmin(false);
+        toast({
+          title: "Development Mode",
+          description: "Signed out successfully (DEVELOPMENT MODE)",
+        });
+        return;
+      }
+      
       await supabase.auth.signOut();
       toast({
         title: "Signed out",
