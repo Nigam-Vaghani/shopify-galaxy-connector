@@ -4,10 +4,13 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart, Menu, X, User, LogOut, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
+import { Badge } from '@/components/ui/badge';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const { isAuthenticated, isAdmin, signOut } = useAuth();
+  const { openCart, totalItems } = useCart();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -46,8 +49,18 @@ const Navbar = () => {
           </nav>
           
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="text-gray-700 hover:text-yellow-600">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-gray-700 hover:text-yellow-600 relative"
+              onClick={openCart}
+            >
               <ShoppingCart className="h-6 w-6" />
+              {totalItems > 0 && (
+                <Badge className="absolute -top-2 -right-2 bg-yellow-500 text-white h-5 w-5 flex items-center justify-center p-0 text-xs rounded-full">
+                  {totalItems}
+                </Badge>
+              )}
             </Button>
             
             {isAuthenticated ? (
@@ -84,8 +97,18 @@ const Navbar = () => {
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
-            <Button variant="ghost" size="icon" className="text-gray-700 hover:text-yellow-600">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-gray-700 hover:text-yellow-600 relative"
+              onClick={openCart}
+            >
               <ShoppingCart className="h-6 w-6" />
+              {totalItems > 0 && (
+                <Badge className="absolute -top-2 -right-2 bg-yellow-500 text-white h-5 w-5 flex items-center justify-center p-0 text-xs rounded-full">
+                  {totalItems}
+                </Badge>
+              )}
             </Button>
           </div>
         </div>

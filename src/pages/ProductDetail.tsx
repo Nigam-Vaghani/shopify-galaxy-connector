@@ -1,18 +1,19 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { products } from '@/data/products';
 import { categories } from '@/data/categories';
-import ProductList from '@/components/ProductList';
 import { Button } from '@/components/ui/button';
 import { Heart, ShoppingCart, Share2, Star, Truck, RotateCcw, Shield } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { useCart } from '@/contexts/CartContext';
+import ProductCard from '@/components/ProductCard';
 
 const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   
   const product = products.find(p => p.id === productId);
   
@@ -33,24 +34,23 @@ const ProductDetail = () => {
     );
   }
   
-  const category = categories.find(c => c.id === product.category);
+  const category = categories.find(c => c.id === product?.category);
   
   // Get related products (same category, excluding current product)
   const relatedProducts = products
-    .filter(p => p.category === product.category && p.id !== product.id)
+    .filter(p => p.category === product?.category && p.id !== product?.id)
     .slice(0, 4);
   
   const handleAddToCart = () => {
-    toast({
-      title: "Added to Cart",
-      description: `${product.name} has been added to your cart.`,
-    });
+    if (product) {
+      addToCart(product);
+    }
   };
   
   const handleAddToWishlist = () => {
     toast({
       title: "Added to Wishlist",
-      description: `${product.name} has been added to your wishlist.`,
+      description: `${product?.name} has been added to your wishlist.`,
     });
   };
   
@@ -201,48 +201,6 @@ const ProductDetail = () => {
         )}
       </main>
       <Footer />
-    </div>
-  );
-};
-
-// Importing ProductCard component for use within this file
-const ProductCard = ({ product }) => {
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg">
-      <a href={`/product/${product.id}`}>
-        <div className="h-48 overflow-hidden">
-          <img 
-            src={product.image} 
-            alt={product.name} 
-            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-          />
-        </div>
-      </a>
-      
-      <div className="p-4">
-        <a href={`/product/${product.id}`}>
-          <h3 className="text-lg font-medium text-gray-900 mb-1 hover:text-blue-600 transition-colors truncate">{product.name}</h3>
-        </a>
-        
-        <div className="flex items-center mb-2">
-          <div className="flex items-center text-yellow-400 mr-2">
-            {[...Array(5)].map((_, i) => (
-              <svg
-                key={i}
-                className={`w-4 h-4 ${i < Math.floor(product.rating) ? "fill-current text-yellow-400" : "fill-current text-gray-300"}`}
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            ))}
-          </div>
-          <span className="text-sm text-gray-500">{product.rating.toFixed(1)}</span>
-        </div>
-        
-        <p className="text-lg font-bold text-gray-900 mb-3">${product.price.toFixed(2)}</p>
-        
-        <Button size="sm" className="w-full">Add to Cart</Button>
-      </div>
     </div>
   );
 };

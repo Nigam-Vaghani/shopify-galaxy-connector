@@ -4,12 +4,21 @@ import { Link } from 'react-router-dom';
 import { Product } from '@/data/products';
 import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useCart } from '@/contexts/CartContext';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { addToCart } = useCart();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg">
       <Link to={`/product/${product.id}`}>
@@ -51,7 +60,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 : 'Out of Stock'
             }
           </span>
-          <Button size="sm">Add to Cart</Button>
+          <Button size="sm" onClick={handleAddToCart} disabled={product.stock === 0}>Add to Cart</Button>
         </div>
       </div>
     </div>
