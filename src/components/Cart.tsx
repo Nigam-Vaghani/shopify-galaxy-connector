@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Drawer, 
@@ -13,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Minus, Plus, ShoppingCart, X } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const { 
@@ -25,13 +25,11 @@ const Cart = () => {
     totalPrice 
   } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleCheckout = () => {
-    toast({
-      title: "Checkout",
-      description: "This would normally proceed to checkout. Feature coming soon!",
-    });
     closeCart();
+    navigate('/checkout');
   };
 
   return (
@@ -122,7 +120,7 @@ const Cart = () => {
                   className="w-full" 
                   onClick={handleCheckout}
                 >
-                  Checkout
+                  Proceed to Checkout
                 </Button>
               </div>
             </div>
