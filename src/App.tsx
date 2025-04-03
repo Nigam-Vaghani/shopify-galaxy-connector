@@ -50,11 +50,7 @@ const App = () => (
               />
               <Route 
                 path="/product/:productId" 
-                element={
-                  <ProtectedRoute requireAuth={true} requireAdmin={false}>
-                    <ProductDetail />
-                  </ProtectedRoute>
-                } 
+                element={<ProductDetail />} 
               />
               <Route 
                 path="/admin" 
