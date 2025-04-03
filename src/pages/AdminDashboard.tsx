@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -13,8 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Pencil, Trash, Plus, ImagePlus } from 'lucide-react';
+import { Pencil, Trash, Plus, ImagePlus, Users } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Link } from 'react-router-dom';
 
 const productSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters'),
@@ -156,7 +156,6 @@ const AdminDashboard = () => {
       };
       
       if (isEditing && currentProductId) {
-        // Update existing product
         const { error } = await supabase
           .from('products')
           .update(productData)
@@ -169,7 +168,6 @@ const AdminDashboard = () => {
           description: "The product has been updated successfully.",
         });
       } else {
-        // Create new product
         const { error } = await supabase
           .from('products')
           .insert([productData]);
@@ -182,13 +180,11 @@ const AdminDashboard = () => {
         });
       }
       
-      // Reset form and state
       form.reset();
       setIsEditing(false);
       setCurrentProductId(null);
       setImageFile(null);
       
-      // Refetch products to update the list
       fetchProducts();
     } catch (error: any) {
       toast({
@@ -210,7 +206,6 @@ const AdminDashboard = () => {
     form.setValue('image_url', product.image_url || '');
     form.setValue('featured', product.featured || false);
     
-    // Scroll to form
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -252,7 +247,15 @@ const AdminDashboard = () => {
       <Navbar />
       <main className="flex-grow p-6 bg-yellow-50">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold text-yellow-700 mb-8">Admin Dashboard</h1>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-yellow-700">Admin Dashboard</h1>
+            <Link to="/admin/users">
+              <Button className="bg-yellow-500 hover:bg-yellow-600 flex items-center gap-2">
+                <Users size={18} />
+                Manage Users
+              </Button>
+            </Link>
+          </div>
           
           <div className="bg-white p-6 rounded-lg shadow-md mb-10 border border-yellow-200">
             <h2 className="text-xl font-semibold text-yellow-600 mb-4">
