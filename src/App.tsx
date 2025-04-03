@@ -20,6 +20,7 @@ import Signup from "./pages/Signup";
 import AdminDashboard from "./pages/AdminDashboard";
 import Checkout from "./pages/Checkout";
 import UserManagement from "./pages/UserManagement";
+import InventoryManagement from "./pages/InventoryManagement";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requireAuth={true} requireAdmin={true}>
                     <UserManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/inventory" 
+                element={
+                  <ProtectedRoute requireAuth={true} requireAdmin={true}>
+                    <InventoryManagement />
                   </ProtectedRoute>
                 } 
               />
