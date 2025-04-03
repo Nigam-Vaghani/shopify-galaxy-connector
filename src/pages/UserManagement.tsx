@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,85 +7,42 @@ import { Button } from '@/components/ui/button';
 import { UserRound, UserX, Shield, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { getUsers } from '@/lib/localUserStorage';
 
 interface UserData {
   id: string;
   email: string;
-  created_at: string;
-  last_sign_in_at: string | null;
-  is_admin: boolean;
+  createdAt: string;
+  lastSignIn: string | null;
+  isAdmin: boolean;
 }
 
 const UserManagement = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user: currentUser } = useAuth();
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = () => {
     setLoading(true);
     try {
-      // In development mode, show mock users if no Supabase connection
-      if (import.meta.env.VITE_SUPABASE_URL === undefined || 
-          import.meta.env.VITE_SUPABASE_URL.includes('placeholder')) {
-        
-        // Create mock data for development
-        const mockUsers = [
-          {
-            id: '1',
-            email: 'user@example.com',
-            created_at: new Date().toISOString(),
-            last_sign_in_at: new Date().toISOString(),
-            is_admin: false
-          },
-          {
-            id: '2',
-            email: 'admin@example.com',
-            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            last_sign_in_at: new Date().toISOString(),
-            is_admin: true
-          },
-          {
-            id: '3',
-            email: 'customer@example.com',
-            created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-            last_sign_in_at: null,
-            is_admin: false
-          }
-        ];
-        
-        setTimeout(() => {
-          setUsers(mockUsers);
-          setLoading(false);
-        }, 1000);
-        
-        return;
-      }
+      // Get users from local storage
+      const localUsers = getUsers();
       
-      // For production environment with real Supabase connection
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      // Map to our UserData interface
+      const formattedUsers = localUsers.map(user => ({
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+        lastSignIn: user.lastSignIn,
+        isAdmin: user.isAdmin
+      }));
       
-      if (authError) throw authError;
-      
-      // Get admin status for each user
-      const usersWithAdminStatus = await Promise.all(
-        authUsers.users.map(async (user) => {
-          const isUserAdmin = await isAdminUser(user.id);
-          return {
-            id: user.id,
-            email: user.email || 'No email',
-            created_at: user.created_at,
-            last_sign_in_at: user.last_sign_in_at,
-            is_admin: isUserAdmin
-          };
-        })
-      );
-      
-      setUsers(usersWithAdminStatus);
+      setUsers(formattedUsers);
     } catch (error: any) {
       console.error('Error fetching users:', error);
       toast({
@@ -99,52 +55,28 @@ const UserManagement = () => {
     }
   };
   
-  const isAdminUser = async (userId: string): Promise<boolean> => {
+  const toggleAdminStatus = (userId: string, currentStatus: boolean) => {
     try {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      // Get all users from local storage
+      const allUsers = getUsers();
       
-      if (error || !data) return false;
-      return true;
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-      return false;
-    }
-  };
-  
-  const toggleAdminStatus = async (userId: string, currentStatus: boolean) => {
-    try {
-      if (currentStatus) {
-        // Remove admin status
-        const { error } = await supabase
-          .from('admin_users')
-          .delete()
-          .eq('user_id', userId);
-          
-        if (error) throw error;
-        
-        toast({
-          title: "Admin status removed",
-          description: "User is no longer an admin",
-        });
-      } else {
-        // Grant admin status
-        const { error } = await supabase
-          .from('admin_users')
-          .insert({ user_id: userId });
-          
-        if (error) throw error;
-        
-        toast({
-          title: "Admin status granted",
-          description: "User is now an admin",
-        });
-      }
+      // Find the user to update
+      const updatedUsers = allUsers.map(user => {
+        if (user.id === userId) {
+          return { ...user, isAdmin: !currentStatus };
+        }
+        return user;
+      });
       
-      // Refresh user list
+      // Save back to local storage
+      localStorage.setItem('honey_shop_users', JSON.stringify(updatedUsers));
+      
+      toast({
+        title: currentStatus ? "Admin status removed" : "Admin status granted",
+        description: currentStatus ? "User is no longer an admin" : "User is now an admin",
+      });
+      
+      // Refresh the user list
       fetchUsers();
     } catch (error: any) {
       toast({
@@ -216,26 +148,29 @@ const UserManagement = () => {
                     users.map(user => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.email}</TableCell>
-                        <TableCell>{formatDate(user.created_at)}</TableCell>
-                        <TableCell>{formatDate(user.last_sign_in_at)}</TableCell>
+                        <TableCell>{formatDate(user.createdAt)}</TableCell>
+                        <TableCell>{formatDate(user.lastSignIn)}</TableCell>
                         <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs ${user.is_admin ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
-                            {user.is_admin ? 'Admin' : 'User'}
+                          <span className={`px-2 py-1 rounded-full text-xs ${user.isAdmin ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
+                            {user.isAdmin ? 'Admin' : 'User'}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end space-x-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => toggleAdminStatus(user.id, user.is_admin)}
-                              className={user.is_admin 
-                                ? "border-red-300 text-red-700 hover:bg-red-50" 
-                                : "border-yellow-300 text-yellow-700 hover:bg-yellow-50"}
-                              title={user.is_admin ? "Remove admin privileges" : "Grant admin privileges"}
-                            >
-                              {user.is_admin ? <UserX size={16} /> : <Shield size={16} />}
-                            </Button>
+                            {/* Don't allow changing own admin status */}
+                            {currentUser?.id !== user.id && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => toggleAdminStatus(user.id, user.isAdmin)}
+                                className={user.isAdmin 
+                                  ? "border-red-300 text-red-700 hover:bg-red-50" 
+                                  : "border-yellow-300 text-yellow-700 hover:bg-yellow-50"}
+                                title={user.isAdmin ? "Remove admin privileges" : "Grant admin privileges"}
+                              >
+                                {user.isAdmin ? <UserX size={16} /> : <Shield size={16} />}
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
