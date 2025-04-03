@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Drawer, 
@@ -13,6 +14,7 @@ import { Minus, Plus, ShoppingCart, X } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Cart = () => {
   const { 
@@ -26,10 +28,19 @@ const Cart = () => {
   } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const handleCheckout = () => {
     closeCart();
-    navigate('/checkout');
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to proceed with checkout",
+      });
+      navigate('/login');
+    } else {
+      navigate('/checkout');
+    }
   };
 
   return (

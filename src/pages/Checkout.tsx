@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -9,7 +8,8 @@ import {
   Home, 
   QrCode, 
   CheckCircle,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -54,6 +55,18 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [showUpiDialog, setShowUpiDialog] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to complete your purchase.",
+        variant: "destructive",
+      });
+      navigate('/login');
+    }
+  }, [isAuthenticated, isLoading, navigate, toast]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -67,6 +80,19 @@ const Checkout = () => {
       paymentMethod: "cod",
     },
   });
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-yellow-500" />
+        <span className="ml-2">Loading...</span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (cartItems.length === 0 && !orderComplete) {
     return (
@@ -101,14 +127,12 @@ const Checkout = () => {
     if (data.paymentMethod === "upi") {
       setShowUpiDialog(true);
     } else if (data.paymentMethod === "card") {
-      // For now, we're simulating a successful payment
       toast({
         title: "Payment successful",
         description: "Your card payment has been processed successfully.",
       });
       completeOrder();
     } else {
-      // COD doesn't need additional processing
       toast({
         title: "Order placed",
         description: "Your order has been placed successfully. You'll pay upon delivery.",
