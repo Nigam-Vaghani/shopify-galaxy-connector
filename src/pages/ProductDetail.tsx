@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -14,6 +15,8 @@ const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  // State to track if the image has failed to load
+  const [imageError, setImageError] = useState(false);
   
   const product = products.find(p => p.id === productId);
   
@@ -53,6 +56,12 @@ const ProductDetail = () => {
       description: `${product?.name} has been added to your wishlist.`,
     });
   };
+
+  // Fallback image handler if product image fails to load
+  const handleImageError = () => {
+    console.log(`Detail image failed to load for: ${product.name}`);
+    setImageError(true);
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -91,9 +100,10 @@ const ProductDetail = () => {
               <div>
                 <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                   <img 
-                    src={product.image} 
+                    src={imageError ? '/placeholder.svg' : product.image} 
                     alt={product.name} 
                     className="w-full h-full object-cover"
+                    onError={handleImageError}
                   />
                 </div>
               </div>

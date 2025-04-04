@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '@/data/products';
 import { Star } from 'lucide-react';
@@ -13,6 +13,8 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
+  // State to track if the image has failed to load
+  const [imageError, setImageError] = useState(false);
 
   // Handle add to cart button click
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -22,8 +24,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   // Fallback image handler if product image fails to load
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.src = '/placeholder.svg';
+  const handleImageError = () => {
+    console.log(`Image failed to load for: ${product.name}`);
+    setImageError(true);
   };
 
   return (
@@ -32,7 +35,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Product image section */}
         <div className="h-56 overflow-hidden">
           <img 
-            src={product.image || '/placeholder.svg'} 
+            src={imageError ? '/placeholder.svg' : product.image} 
             alt={product.name} 
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
             onError={handleImageError}
