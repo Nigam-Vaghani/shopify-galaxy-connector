@@ -1,3 +1,4 @@
+
 import { Product } from '@/data/products';
 
 export interface User {
@@ -111,7 +112,7 @@ export const removeItem = (productId: string): boolean => {
   return true;
 };
 
-// Add this function to your localUserStorage.ts
+// Add a new product to inventory
 export const addNewProduct = (product: {
   name: string;
   description: string;
@@ -127,7 +128,7 @@ export const addNewProduct = (product: {
     // Get current inventory
     const inventory = getInventory();
     
-    // Add the new product with the generated ID
+    // Add the new product with the generated ID and required fields for ProductWithQuantity
     const newProduct: ProductWithQuantity = {
       id,
       name: product.name,
@@ -135,13 +136,16 @@ export const addNewProduct = (product: {
       price: product.price,
       category: product.category,
       image: product.image,
-      quantity: product.quantity
+      quantity: product.quantity,
+      rating: 4.0, // Default rating for new products
+      stock: product.quantity, // Set stock to match initial quantity
+      featured: false // Default to not featured
     };
     
     inventory.push(newProduct);
     
     // Save back to localStorage
-    localStorage.setItem('honey_shop_inventory', JSON.stringify(inventory));
+    localStorage.setItem(LOCAL_INVENTORY_KEY, JSON.stringify(inventory));
     return true;
   } catch (error) {
     console.error('Error adding new product:', error);

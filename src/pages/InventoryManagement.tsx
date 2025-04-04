@@ -11,7 +11,7 @@ import {
   Trash, 
   Loader2, 
   PackagePlus,
-  X
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -98,7 +98,7 @@ const InventoryManagement = () => {
         title: "Success",
         description: "Item quantity updated",
       });
-      loadInventory();
+      loadInventory(); // Reload inventory to reflect changes
     } else {
       toast({
         title: "Error",
@@ -115,7 +115,8 @@ const InventoryManagement = () => {
           title: "Success",
           description: "Item removed from inventory",
         });
-        loadInventory();
+        // Update local state directly instead of reloading the entire inventory
+        setInventory(inventory.filter(item => item.id !== id));
       } else {
         toast({
           title: "Error",
@@ -182,6 +183,8 @@ const InventoryManagement = () => {
           description: "Product added to inventory",
         });
         setIsAddProductOpen(false);
+        
+        // Reset form
         setNewProduct({
           name: '',
           description: '',
@@ -190,6 +193,8 @@ const InventoryManagement = () => {
           quantity: '10',
           image: '/placeholder.svg'
         });
+        
+        // Load the updated inventory
         loadInventory();
       } else {
         toast({
@@ -246,6 +251,7 @@ const InventoryManagement = () => {
                   variant="outline"
                   className="border-yellow-300 text-yellow-700"
                 >
+                  <RefreshCw size={16} className="mr-1" />
                   Refresh Inventory
                 </Button>
               </div>
