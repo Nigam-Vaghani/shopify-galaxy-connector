@@ -120,6 +120,7 @@ export const addNewProduct = (product: {
   category: string;
   image: string;
   quantity: number;
+  featured?: boolean;
 }): boolean => {
   try {
     // Generate a new unique ID for the product
@@ -135,11 +136,11 @@ export const addNewProduct = (product: {
       description: product.description,
       price: product.price,
       category: product.category,
-      image: product.image,
+      image: product.image || '/placeholder.svg', // Ensure we always have an image
       quantity: product.quantity,
       rating: 4.0, // Default rating for new products
       stock: product.quantity, // Set stock to match initial quantity
-      featured: false // Default to not featured
+      featured: product.featured || false // Default to not featured if not provided
     };
     
     inventory.push(newProduct);
