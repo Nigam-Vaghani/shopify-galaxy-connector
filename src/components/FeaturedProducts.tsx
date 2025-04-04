@@ -1,10 +1,16 @@
 
-import React from 'react';
-import { products } from '@/data/products';
+import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
+import { getInventory, ProductWithQuantity } from '@/lib/localUserStorage';
 
 const FeaturedProducts = () => {
-  const featuredProducts = products.filter(product => product.featured).slice(0, 4);
+  const [featuredProducts, setFeaturedProducts] = useState<ProductWithQuantity[]>([]);
+  
+  useEffect(() => {
+    const inventory = getInventory();
+    const featured = inventory.filter(product => product.featured).slice(0, 4);
+    setFeaturedProducts(featured);
+  }, []);
   
   return (
     <section className="py-12 bg-background">

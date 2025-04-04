@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import { products } from '@/data/products';
 import { categories } from '@/data/categories';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,19 +11,27 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { getInventory, ProductWithQuantity } from '@/lib/localUserStorage';
 
 const CategoryPage = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
-  const [filteredProducts, setFilteredProducts] = useState(products);
+  const [allProducts, setAllProducts] = useState<ProductWithQuantity[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<ProductWithQuantity[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [minRating, setMinRating] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   
   const category = categories.find(cat => cat.id === categoryId);
+
+  // Load products from inventory
+  useEffect(() => {
+    const inventoryProducts = getInventory();
+    setAllProducts(inventoryProducts);
+  }, []);
   
   useEffect(() => {
-    let result = products;
+    let result = allProducts;
     
     if (categoryId) {
       result = result.filter(product => product.category === categoryId);
@@ -46,7 +54,7 @@ const CategoryPage = () => {
     }
     
     setFilteredProducts(result);
-  }, [categoryId, searchTerm, priceRange, minRating]);
+  }, [categoryId, searchTerm, priceRange, minRating, allProducts]);
   
   const resetFilters = () => {
     setSearchTerm('');
