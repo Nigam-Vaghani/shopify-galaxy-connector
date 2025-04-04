@@ -1,4 +1,3 @@
-
 import { Product } from '@/data/products';
 
 export interface User {
@@ -110,4 +109,42 @@ export const removeItem = (productId: string): boolean => {
   
   localStorage.setItem(LOCAL_INVENTORY_KEY, JSON.stringify(updatedInventory));
   return true;
+};
+
+// Add this function to your localUserStorage.ts
+export const addNewProduct = (product: {
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  quantity: number;
+}): boolean => {
+  try {
+    // Generate a new unique ID for the product
+    const id = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    
+    // Get current inventory
+    const inventory = getInventory();
+    
+    // Add the new product with the generated ID
+    const newProduct: ProductWithQuantity = {
+      id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      category: product.category,
+      image: product.image,
+      quantity: product.quantity
+    };
+    
+    inventory.push(newProduct);
+    
+    // Save back to localStorage
+    localStorage.setItem('honey_shop_inventory', JSON.stringify(inventory));
+    return true;
+  } catch (error) {
+    console.error('Error adding new product:', error);
+    return false;
+  }
 };
